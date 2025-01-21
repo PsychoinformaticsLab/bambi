@@ -228,8 +228,8 @@ class Model:
 
     def fit(
         self,
-        draws=1000,
-        tune=1000,
+        draws=None,
+        tune=None,
         discard_tuned_samples=True,
         omit_offsets=True,
         include_mean=None,
@@ -315,6 +315,16 @@ class Model:
         `bmb.inference_methods.names['bayeux']['mcmc]`.
         An `Approximation` object if  `"vi"`.
         """
+        if draws is None:
+            draws = 1000
+        else:
+            kwargs["num_steps"] = draws
+
+        if tune is None:
+            tune = 1000
+        else:
+            kwargs["num_adapt_draws"] = tune
+
         method = kwargs.pop("method", None)
         if method is not None:
             if inference_method == "vi":
