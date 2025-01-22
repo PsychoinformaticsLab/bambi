@@ -9,6 +9,7 @@ from importlib.metadata import version
 import formulae as fm
 import pymc as pm
 import pandas as pd
+import numpy as np
 
 from arviz.plots import plot_posterior
 
@@ -802,6 +803,8 @@ class Model:
         inplace=True,
         include_group_specific=True,
         sample_new_groups=False,
+        num_draws=None,
+        random_seed=None,
     ):
         """Predict method for Bambi models
 
@@ -838,6 +841,11 @@ class Model:
             draws of a randomly selected existing group. Since different groups may be selected at
             each draw, the end result represents the variation across existing groups.
             The method implemented is quivalent to `sample_new_levels="uncertainty"` in brms.
+        num_draws : int or None, optional
+            Determines the number of draws to use for the posterior predictive distribution.
+            If `None`, all available draws from the posterior are used.
+        random_seed : int
+            Seed for the random number generator.
 
         Returns
         -------
@@ -863,15 +871,35 @@ class Model:
         if not inplace:
             idata = deepcopy(idata)
 
+        if num_draws is not None:
+            if inplace:
+                raise ValueError("Cannot set `inplace=True` when `num_draws` is not None.")
+            total_draws = len(idata.posterior.draw)
+            if num_draws > total_draws:
+                warnings.warn(
+                    f"Requested {num_draws} draws but only {total_draws} are available. "
+                    "Using all available draws.",
+                    UserWarning,
+                )
+                num_draws = total_draws
+
+            rng = np.random.default_rng(seed=random_seed)
+
+            selected_draws = rng.choice(idata.posterior.draw.values, size=num_draws, replace=False)
+
+            idata_subset = idata.sel(draw=selected_draws)
+        else:
+            idata_subset = idata
+
         # Populate the posterior in the InferenceData object with the likelihood parameters
-        idata = self._compute_likelihood_params(
-            idata, data, include_group_specific, sample_new_groups
+        idata_subset = self._compute_likelihood_params(
+            idata_subset, data, include_group_specific, sample_new_groups
         )
 
         # Only if requested predict the predictive distribution
         if kind == "response":
             response_aliased_name = get_aliased_name(self.response_component.term)
-            required_kwargs = {"model": self, "posterior": idata.posterior}
+            required_kwargs = {"model": self, "posterior": idata_subset.posterior}
             optional_kwargs = {"data": data}
 
             posterior_predictive = self.family.posterior_predictive(
