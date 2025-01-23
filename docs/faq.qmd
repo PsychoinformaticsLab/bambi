@@ -16,6 +16,11 @@ It is a very powerful library, but can be challenging to use for beginners.
 Bambi provides a simple interface for specifying models, and allows for easy inference via
 MCMC or variational inference using PyMC.
 
+## Why do the functions in the `interpret` submodule expect names of variables and not names of terms?
+
+* In the interpret submodule, functions are designed to work with the names of variables directly rather than the names of terms. This approach simplifies the usage and avoids potential confusion.
+  For example, instead of passing bs(var_name, degree=3, knots=knots), you should pass var_name. The term bs(var_name, degree=3, knots=knots) represents a transformed version of the variable which includes additional details like degree and knots. However, the interpret functions are built to handle the raw variable names to maintain clarity and simplicity.
+
 ## Inference Questions
 
 ### What sampling methods are available?
