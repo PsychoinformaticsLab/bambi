@@ -123,6 +123,116 @@ fitted = model.fit()
 
 After this, we can evaluate the model as before. 
 
+
+### Piecewise Regression
+
+We'll use synthetic data to demonstrate the piecewise regression.
+
+import numpy as np
+import pandas as pd
+import statsmodels.formula.api as smf
+
+# Generate synthetic data
+np.random.seed(0)
+x = np.linspace(0, 30, 100)
+y = 3 + 0.5 * x + 1.5 * truncate(x, 10) + 2.0 * truncate(x, 20) + np.random.normal(0, 1, 100)
+
+# Create a DataFrame
+df = pd.DataFrame({'x': x, 'response': y})
+
+# Define the truncate function
+def truncate(x, l):
+    return (x - l) * (x >= l)
+
+# Fit the piecewise regression model
+formula = "response ~ x + truncate(x, 10) + truncate(x, 20)"
+model = smf.ols(formula, data=df).fit()
+
+# Display the model summary
+print(model.summary())
+
+The output will include the summary of the fitted regression model, showing coefficients for each term:
+
+                            OLS Regression Results
+==============================================================================
+Dep. Variable:               response   R-squared:                       0.963
+Model:                            OLS   Adj. R-squared:                  0.962
+Method:                 Least Squares   F-statistic:                     838.8
+Date:                Thu, 23 Jan 2025   Prob (F-statistic):           7.62e-71
+Time:                        22:42:00   Log-Likelihood:                -136.22
+No. Observations:                 100   AIC:                             280.4
+Df Residuals:                      96   BIC:                             290.9
+Df Model:                           3
+Covariance Type:            nonrobust
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept      3.1241      0.150     20.842      0.000       2.826       3.422
+x              0.4921      0.014     34.274      0.000       0.465       0.519
+truncate(10)   1.4969      0.024     61.910      0.000       1.449       1.544
+truncate(20)   1.9999      0.018    110.199      0.000       1.964       2.036
+==============================================================================
+Omnibus:                        0.385   Durbin-Watson:                   2.227
+Prob(Omnibus):                  0.825   Jarque-Bera (JB):                0.509
+Skew:                          -0.046   Prob(JB):                        0.775
+Kurtosis:                       2.669   Cond. No.                         47.4
+==============================================================================
+
+This summary shows the coefficients for the intercept, x, truncate(x, 10), and truncate(x, 20) terms, along with their statistical significance.
+
+
+# Potential
+
+we'll demonstrate the concept of potential in a probabilistic model using a likelihood function. In this case, we'll use a Gaussian distribution (Normal distribution) to represent the likelihood and add a potential function to constrain the model.
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+def likelihood(x, mu, sigma):
+    """
+    Gaussian likelihood function
+    """
+    return (1 / (np.sqrt(2 * np.pi) * sigma)) * np.exp(-0.5 * ((x - mu) / sigma) ** 2)
+
+def potential(x):
+    """
+    Potential function to constrain the model
+    """
+    # Example potential: Quadratic potential centered at x = 2
+    return np.exp(-0.5 * (x - 2) ** 2)
+
+def posterior(x, mu, sigma):
+    """
+    Posterior function combining likelihood and potential
+    """
+    return likelihood(x, mu, sigma) * potential(x)
+
+# Define parameters
+mu = 0
+sigma = 1
+x_values = np.linspace(-5, 5, 100)
+
+# Calculate likelihood, potential, and posterior
+likelihood_values = likelihood(x_values, mu, sigma)
+potential_values = potential(x_values)
+posterior_values = posterior(x_values, mu, sigma)
+
+# Plot the functions
+plt.figure(figsize=(10, 6))
+plt.plot(x_values, likelihood_values, label='Likelihood', linestyle='--')
+plt.plot(x_values, potential_values, label='Potential', linestyle=':')
+plt.plot(x_values, posterior_values, label='Posterior')
+plt.xlabel('x')
+plt.ylabel('Probability Density')
+plt.title('Likelihood, Potential, and Posterior')
+plt.legend()
+plt.show()
+
+
+This example visually demonstrates how adding a potential function can constrain the model and influence the resulting distribution.
+
+
+
 ### More
 
 For a more in-depth introduction to Bambi see our [Quickstart](https://github.com/bambinos/bambi#quickstart) and check the notebooks in the [Examples](https://bambinos.github.io/bambi/notebooks/) webpage.
