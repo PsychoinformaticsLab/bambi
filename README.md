@@ -123,6 +123,98 @@ fitted = model.fit()
 
 After this, we can evaluate the model as before. 
 
+
+### Piecewise Regression
+Let's walk through an example of performing a piecewise regression using Bambi.
+
+```python
+
+# Create example data
+np.random.seed(42)
+x = np.linspace(0, 10, 100)
+y = np.where(x < 5, 2*x + np.random.normal(0, 1, 100), -3*x + 20 + np.random.normal(0, 1, 100))
+data = pd.DataFrame({'x': x, 'y': y})
+
+# Plot the data
+plt.scatter(data['x'], data['y'])
+plt.xlabel('x')
+plt.ylabel('y')
+plt.show()
+
+# Define the model with a spline term for 'x'
+model = bmb.Model('y ~ 0 + x + (x > 5) + (x - 5) * (x > 5)', data)
+
+# Fit the model
+results = model.fit(draws=2000, cores=2)
+
+# Summarize the results
+print(results.summary())
+
+# Predict and plot the fitted values
+x_pred = np.linspace(0, 10, 100)
+data_pred = pd.DataFrame({'x': x_pred})
+y_pred = model.predict(idata=results, data=data_pred).posterior_predictive.mean(axis=0)
+
+plt.scatter(data['x'], data['y'], label='Data')
+plt.plot(x_pred, y_pred, color='red', label='Fitted Piecewise Regression')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend()
+plt.show()
+```
+
+This should give you a piecewise regression model fitted to your data using Bambi. The plot will show the original data points and the fitted piecewise regression line.
+
+# Potential
+
+we'll demonstrate the concept of potential in a probabilistic model using a likelihood function. In this case, we'll use a Gaussian distribution (Normal distribution) to represent the likelihood and add a potential function to constrain the model.
+
+```python
+def likelihood(x, mu, sigma):
+    """
+    Gaussian likelihood function
+    """
+    return (1 / (np.sqrt(2 * np.pi) * sigma)) * np.exp(-0.5 * ((x - mu) / sigma) ** 2)
+
+def potential(x):
+    """
+    Potential function to constrain the model
+    """
+    # Example potential: Quadratic potential centered at x = 2
+    return np.exp(-0.5 * (x - 2) ** 2)
+
+def posterior(x, mu, sigma):
+    """
+    Posterior function combining likelihood and potential
+    """
+    return likelihood(x, mu, sigma) * potential(x)
+
+# Define parameters
+mu = 0
+sigma = 1
+x_values = np.linspace(-5, 5, 100)
+
+# Calculate likelihood, potential, and posterior
+likelihood_values = likelihood(x_values, mu, sigma)
+potential_values = potential(x_values)
+posterior_values = posterior(x_values, mu, sigma)
+
+# Plot the functions
+plt.figure(figsize=(10, 6))
+plt.plot(x_values, likelihood_values, label='Likelihood', linestyle='--')
+plt.plot(x_values, potential_values, label='Potential', linestyle=':')
+plt.plot(x_values, posterior_values, label='Posterior')
+plt.xlabel('x')
+plt.ylabel('Probability Density')
+plt.title('Likelihood, Potential, and Posterior')
+plt.legend()
+plt.show()
+```
+
+This example visually demonstrates how adding a potential function can constrain the model and influence the resulting distribution.
+
+
+
 ### More
 
 For a more in-depth introduction to Bambi see our [Quickstart](https://github.com/bambinos/bambi#quickstart) and check the notebooks in the [Examples](https://bambinos.github.io/bambi/notebooks/) webpage.

@@ -14,7 +14,17 @@ inference.
 * PyMC is a library for Bayesian modelling, and is the backend used by Bambi. 
 It is a very powerful library, but can be challenging to use for beginners. 
 Bambi provides a simple interface for specifying models, and allows for easy inference via
-MCMC or variational inference using PyMC.
+
+### Why have a Bayesian regression library?
+
+Bayesian modelling allows flexible (read 'bespoke') model specification and also provides an
+estimation of uncertainty in the model parameters. Both of these are wildly useful in
+practice, in particular in a business context where the model is used to make decisions,
+and where a complex model may be needed to capture the underlying relationships. Further,
+Bayesian modelling allows graceful handling of small sample sizes by judicious use of
+prior distributions.
+
+###
 
 ## Inference Questions
 
@@ -32,6 +42,18 @@ See API for "fit" method for more details [here](https://bambinos.github.io/bamb
 Yes, Bambi supports inference on GPUs and TPUs using the numpyro and blackjax backends. 
 See the API for "fit" method for more details 
 [here](https://bambinos.github.io/bambi/api/Model.html#bambi.Model.fit).
+
+### My sampler through errors/indicating divergences, what should I do?
+
+* Divergences are a common issue in Bayesian modelling, and are usually not a problem as long as
+they are not prevalent. However, if you are seeing a lot of divergences, you may want
+to try 1) respecifying your model, 2) a different sampler.
+* If the sampler fails, this is likely an issue with model specification. Make sure you are using
+the correct priors for your model, and that you are not specifying a prior that is too
+strong (e.g. a prior that is too narrow), or one that does not match the data (e.g. a
+prior that doesn't cover the domain of the data such as using a HalfNormal prior for a
+parameter that can be negative).
+
 
 ## Model Specification Questions
 
